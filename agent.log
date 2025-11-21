@@ -1,0 +1,11 @@
+2025-11-21 14:53:18,914 - agent_try.agent - INFO - SessionManager initialized
+2025-11-21 14:53:18,914 - agent_try.agent - INFO - Agent created successfully with model: gemini-2.5-flash-lite
+2025-11-21 14:53:18,922 - agent_try.agent - INFO - Processing query: 'Hello, who are you?'
+2025-11-21 14:53:18,922 - agent_try.agent - INFO - Agent created successfully with model: gemini-2.5-flash-lite
+2025-11-21 14:53:18,928 - google_adk.google.adk.runners - WARNING - App name mismatch detected. The runner is configured with app name "professional_search_agent", but the root agent was loaded from "C:\Users\ajmel\Desktop\agent\.venv\Lib\site-packages\google\adk\agents", which implies app name "agents".
+2025-11-21 14:53:18,929 - agent_try.agent - INFO - Created new session and runner: default_user:default_session
+2025-11-21 14:53:20,934 - google_adk.google.adk.models.google_llm - INFO - Sending out request, model: gemini-2.5-flash-lite, backend: GoogleLLMVariant.GEMINI_API, stream: False
+2025-11-21 14:53:20,946 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-11-21 14:53:23,204 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2025-11-21 14:53:23,223 - google_adk.google.adk.models.google_llm - INFO - Response received from the model.
+2025-11-21 14:53:23,226 - agent_try.agent - INFO - Successfully generated response for query ('Hello, who are you?...') - Length: 107 chars

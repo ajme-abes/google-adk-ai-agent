@@ -1,0 +1,30 @@
+[project]
+name = "agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-adk>=1.19.0",
+    "google-genai>=1.52.0",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["agent_try/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "asyncio: mark test as asyncio",
+    "async: mark test as asynchronous"
+]
+asyncio_mode = "auto"
+addopts = "-v --strict-markers"
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:google.adk",
+    "ignore::PytestConfigWarning"
+]
