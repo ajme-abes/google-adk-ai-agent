@@ -300,8 +300,6 @@ Key benefits include scalability, independent deployment, and technology diversi
 
 ### 🌐 Web Interface
 
-Your agent includes a professional web interface powered by Google ADK:
-
 ```bash
 # Start the web server
 adk web --port 8000
