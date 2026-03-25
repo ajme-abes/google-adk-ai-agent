@@ -20,7 +20,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
         }
 
         .container {
@@ -216,28 +215,27 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 AI Agent</h1>
+            <h1>AI Agent</h1>
             <p>Powered by Google ADK &amp; Gemini 2.5 Flash</p>
         </div>
 
         <div class="chat-box" id="chatBox">
             <div class="message agent">
-                <div class="avatar">🤖</div>
-                <div class="bubble">Hey! I'm your AI assistant powered by Gemini. I can answer questions, search the web
-                    for current info, and help with pretty much anything. What's on your mind?</div>
+                <div class="avatar">AI</div>
+                <div class="bubble">Hey! I'm your AI assistant powered by Gemini. I can answer questions and search the
+                    web for current info. What's on your mind?</div>
             </div>
         </div>
 
         <div class="input-area">
             <textarea id="input" rows="1" placeholder="Ask me anything..." onkeydown="handleKey(event)"></textarea>
-            <button id="sendBtn" onclick="sendMessage()">➤</button>
+            <button id="sendBtn" onclick="sendMessage()">Send</button>
         </div>
 
         <div class="footer">Built with Google ADK · Gemini 2.5 Flash Lite</div>
     </div>
 
     <script>
-        // Session identifiers
         const APP_NAME = "agent_try";
         const USER_ID = "portfolio_user";
         const SESSION_ID = "session_" + Math.random().toString(36).slice(2, 9);
@@ -245,6 +243,20 @@
         const chatBox = document.getElementById("chatBox");
         const input = document.getElementById("input");
         const sendBtn = document.getElementById("sendBtn");
+
+        let sessionReady = false;
+
+        async function ensureSession() {
+            if (sessionReady) return;
+            try {
+                await fetch("/apps/" + APP_NAME + "/users/" + USER_ID + "/sessions/" + SESSION_ID, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({})
+                });
+            } catch (e) { /* session may already exist, that's fine */ }
+            sessionReady = true;
+        }
 
         function handleKey(e) {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -255,26 +267,24 @@
 
         function addMessage(role, text) {
             const msg = document.createElement("div");
-            msg.className = `message ${role}`;
-            msg.innerHTML = `
-      <div class="avatar">${role === "user" ? "🧑" : "🤖"}</div>
-      <div class="bubble">${escapeHtml(text)}</div>
-    `;
+            msg.className = "message " + role;
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.textContent = role === "user" ? "You" : "AI";
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            bubble.textContent = text;
+            msg.appendChild(avatar);
+            msg.appendChild(bubble);
             chatBox.appendChild(msg);
             chatBox.scrollTop = chatBox.scrollHeight;
-            return msg;
         }
 
         function addTyping() {
             const msg = document.createElement("div");
             msg.className = "message agent typing";
             msg.id = "typing";
-            msg.innerHTML = `
-      <div class="avatar">🤖</div>
-      <div class="bubble">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      </div>
-    `;
+            msg.innerHTML = '<div class="avatar">AI</div><div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
             chatBox.appendChild(msg);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -282,14 +292,6 @@
         function removeTyping() {
             const t = document.getElementById("typing");
             if (t) t.remove();
-        }
-
-        function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/\n/g, "<br>");
         }
 
         async function sendMessage() {
@@ -302,33 +304,32 @@
             addTyping();
 
             try {
+                await ensureSession();
+
                 const res = await fetch("/run", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        app_name: APP_NAME,
-                        user_id: USER_ID,
-                        session_id: SESSION_ID,
-                        new_message: {
+                        appName: APP_NAME,
+                        userId: USER_ID,
+                        sessionId: SESSION_ID,
+                        newMessage: {
                             role: "user",
-                            parts: [{ text }]
+                            parts: [{ text: text }]
                         }
                     })
                 });
 
-                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                if (!res.ok) throw new Error("Server error: " + res.status);
 
                 const events = await res.json();
                 removeTyping();
 
-                // Find the final response text from events
                 let reply = "";
                 for (const event of events) {
-                    if (event.content?.parts) {
+                    if (event.content && event.content.role === "model" && event.content.parts) {
                         for (const part of event.content.parts) {
-                            if (part.text && event.content.role === "model") {
-                                reply = part.text;
-                            }
+                            if (part.text) reply = part.text;
                         }
                     }
                 }
@@ -337,7 +338,7 @@
 
             } catch (err) {
                 removeTyping();
-                addMessage("agent", `Sorry, something went wrong: ${err.message}`);
+                addMessage("agent", "Sorry, something went wrong: " + err.message);
             }
 
             sendBtn.disabled = false;
