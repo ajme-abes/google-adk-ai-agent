@@ -23,8 +23,6 @@ markers = [
 ]
 asyncio_mode = "auto"
 addopts = "-v --strict-markers"
-[tool.pytest.ini_options]
 filterwarnings = [
-    "ignore::DeprecationWarning:google.adk",
-    "ignore::PytestConfigWarning"
+    "ignore::DeprecationWarning"
 ]

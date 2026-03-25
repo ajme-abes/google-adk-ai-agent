@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: ai-agent
+    runtime: docker
+    plan: free
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false

@@ -9,8 +9,7 @@ import asyncio
 import time
 from typing import List, Dict, Any
 from datetime import datetime
-from agent_try.agent import root_agent, get_agent_response, setup_session_and_runner
-from google.genai import types
+from agent_try.agent import root_agent, get_agent_response
 import os
 
 
@@ -25,8 +24,8 @@ class AgentRunner:
     async def initialize(self):
         """Initialize the agent session and runner."""
         try:
-            from agent_try.agent import setup_session_and_runner
-            session, runner = await setup_session_and_runner()
+            from agent_try.agent import session_manager
+            session, runner = await session_manager.get_session_and_runner()
             self.session_service = runner.session_service
             self.runner = runner
             print(f"✅ Agent '{self.agent_name}' initialized successfully")
