@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Agent Chat</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 16px 0 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #4f8ef7, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 10px 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: #4f8ef7;
+        }
+
+        .message.agent .avatar {
+            background: #a78bfa;
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message.user .bubble {
+            background: #1e3a5f;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.agent .bubble {
+            background: #1e1e2e;
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing .bubble {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            padding: 14px 18px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background: #a78bfa;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            padding: 16px 0 8px;
+        }
+
+        textarea {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            color: #e0e0e0;
+            font-size: 0.92rem;
+            padding: 12px 16px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            max-height: 120px;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: #4f8ef7;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4f8ef7, #a78bfa);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0 18px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.72rem;
+            color: #444;
+            padding-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Agent</h1>
+            <p>Powered by Google ADK &amp; Gemini 2.5 Flash</p>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="message agent">
+                <div class="avatar">🤖</div>
+                <div class="bubble">Hey! I'm your AI assistant powered by Gemini. I can answer questions, search the web
+                    for current info, and help with pretty much anything. What's on your mind?</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="input" rows="1" placeholder="Ask me anything..." onkeydown="handleKey(event)"></textarea>
+            <button id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+
+        <div class="footer">Built with Google ADK · Gemini 2.5 Flash Lite</div>
+    </div>
+
+    <script>
+        // Session identifiers
+        const APP_NAME = "agent_try";
+        const USER_ID = "portfolio_user";
+        const SESSION_ID = "session_" + Math.random().toString(36).slice(2, 9);
+
+        const chatBox = document.getElementById("chatBox");
+        const input = document.getElementById("input");
+        const sendBtn = document.getElementById("sendBtn");
+
+        function handleKey(e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function addMessage(role, text) {
+            const msg = document.createElement("div");
+            msg.className = `message ${role}`;
+            msg.innerHTML = `
+      <div class="avatar">${role === "user" ? "🧑" : "🤖"}</div>
+      <div class="bubble">${escapeHtml(text)}</div>
+    `;
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return msg;
+        }
+
+        function addTyping() {
+            const msg = document.createElement("div");
+            msg.className = "message agent typing";
+            msg.id = "typing";
+            msg.innerHTML = `
+      <div class="avatar">🤖</div>
+      <div class="bubble">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    `;
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeTyping() {
+            const t = document.getElementById("typing");
+            if (t) t.remove();
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\n/g, "<br>");
+        }
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = "";
+            sendBtn.disabled = true;
+            addMessage("user", text);
+            addTyping();
+
+            try {
+                const res = await fetch("/run", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        app_name: APP_NAME,
+                        user_id: USER_ID,
+                        session_id: SESSION_ID,
+                        new_message: {
+                            role: "user",
+                            parts: [{ text }]
+                        }
+                    })
+                });
+
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+                const events = await res.json();
+                removeTyping();
+
+                // Find the final response text from events
+                let reply = "";
+                for (const event of events) {
+                    if (event.content?.parts) {
+                        for (const part of event.content.parts) {
+                            if (part.text && event.content.role === "model") {
+                                reply = part.text;
+                            }
+                        }
+                    }
+                }
+
+                addMessage("agent", reply || "I processed your request but couldn't generate a response. Please try again.");
+
+            } catch (err) {
+                removeTyping();
+                addMessage("agent", `Sorry, something went wrong: ${err.message}`);
+            }
+
+            sendBtn.disabled = false;
+            input.focus();
+        }
+    </script>
+</body>
+
+</html>

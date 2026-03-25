@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD adk api_server --port ${PORT:-8000} --host 0.0.0.0
+CMD python server.py
